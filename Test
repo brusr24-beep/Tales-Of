@@ -58,7 +58,7 @@
         font-size: 0.9rem;
     }
 
-    /* CHAPTER BANNER */
+    /* CHAPTER BANNER (not yet used, but ready) */
     #chapter-banner {
         position: fixed;
         top: 0; left: 0;
@@ -130,6 +130,10 @@
         border: 1px solid #444;
         background-size: cover;
         background-position: center;
+    }
+
+    #npc-portrait {
+        display: none; /* hidden unless an NPC is present */
     }
 
     /* STORY AREA */
@@ -270,7 +274,7 @@
     <!-- IN-GAME SOUND TOGGLE -->
     <button id="sound-toggle-game">Sound: On</button>
 
-    <!-- CHAPTER BANNER -->
+    <!-- CHAPTER BANNER (optional) -->
     <div id="chapter-banner">
         <div id="chapter-title"></div>
         <div id="chapter-subtitle"></div>
@@ -308,7 +312,7 @@
                 </div>
             </div>
 
-            <!-- RIGHT PORTRAIT -->
+            <!-- RIGHT PORTRAIT (NPC, hidden when none) -->
             <div id="npc-portrait" class="portrait-box"></div>
 
         </div>
@@ -387,6 +391,10 @@ const musicKael = document.getElementById("musicKael");
 
 const btnSoundMenu = document.getElementById("btn-sound-toggle-menu");
 const btnSoundGame = document.getElementById("sound-toggle-game");
+
+/* REGISTRIES */
+const enemyDialogues = {};
+const storyActions = {};
 
 /* ============================================================
    MUSIC SYSTEM
@@ -519,6 +527,10 @@ function showScene(text, options = []) {
         btn.onclick = () => handleAction(opt.action);
         choices.appendChild(btn);
     });
+
+    // No NPC by default unless story explicitly sets one
+    npcPortrait.style.display = "none";
+    npcPortrait.style.backgroundImage = "";
 }
 
 function updateStats() {
@@ -579,7 +591,7 @@ document.getElementById("btn-load-game").onclick = () => {
     }
 
     player = data.player;
-    currentAction = data.currentAction;
+    currentAction = data.currentAction || "startChapter1";
 
     menu.style.display = "none";
     game.style.display = "block";
@@ -666,7 +678,14 @@ function startFight(name, statsObj, portrait, dialogueKey) {
         dialogueKey
     };
 
-    npcPortrait.style.backgroundImage = portrait ? `url('${portrait}')` : "";
+    if (portrait) {
+        npcPortrait.style.display = "block";
+        npcPortrait.style.backgroundImage = `url('${portrait}')`;
+    } else {
+        npcPortrait.style.display = "none";
+        npcPortrait.style.backgroundImage = "";
+    }
+
     showEnemyDialogueBefore();
 }
 
@@ -676,19 +695,19 @@ function showEnemyDialogueBefore() {
 }
 
 function beginCombat() {
-    choices.innerHTML = "";
     intro.innerHTML = "";
+    choices.innerHTML = "";
 
     combatHUD.style.display = "block";
     enterCombatMusicState();
     updateCombatHUD();
 
-    showScene(`You face <b>${enemy.name}</b>.`, [
-        { text: "Attack", action: "attack" },
-        { text: "Cast Spell", action: "spellMenu" },
-        { text: "Defend", action: "defend" },
-        { text: "Use Potion", action: "potionMenu" }
-    ]);
+    choices.innerHTML = `
+        <button onclick="handleAction('attack')">Attack</button>
+        <button onclick="handleAction('spellMenu')">Cast Spell</button>
+        <button onclick="handleAction('defend')">Defend</button>
+        <button onclick="handleAction('potionMenu')">Use Potion</button>
+    `;
 }
 
 function updateCombatHUD() {
@@ -862,6 +881,7 @@ function finishWin() {
     player.xp += enemy.xp;
 
     updateStats();
+    npcPortrait.style.display = "none";
     npcPortrait.style.backgroundImage = "";
 
     storyActions.afterCombat();
@@ -872,6 +892,10 @@ function gameOver() {
     inCombat = false;
     isCombatPhase = false;
     exitCombatMusicState();
+
+    combatHUD.style.display = "none";
+    npcPortrait.style.display = "none";
+    npcPortrait.style.backgroundImage = "";
 
     showScene("You have fallen...", [
         { text: "Return to Menu", action: "returnToMenu" },
@@ -891,19 +915,18 @@ function restartFromBeginning() {
 }
 
 /* ============================================================
-   REGISTRIES
-   ============================================================ */
-
-const enemyDialogues = {};
-const storyActions = {};
-
-/* ============================================================
-   INIT
+   INIT (AUDIO UNLOCK)
    ============================================================ */
 
 window.addEventListener("load", () => {
-    playMenuMusic();
     updateSoundButtons();
+
+    // Unlock audio on first click, then start menu music
+    function initMusic() {
+        document.removeEventListener("click", initMusic);
+        if (soundEnabled) playMenuMusic();
+    }
+    document.addEventListener("click", initMusic);
 });
 </script>
 <script>
@@ -913,7 +936,6 @@ window.addEventListener("load", () => {
 
 Object.assign(enemyDialogues, {
 
-    /* AELION ENEMIES */
     goblinScout: {
         before: "Fresh meat! Chief will like your head!",
         after: "No… Chief… protect us…"
@@ -950,7 +972,6 @@ Emberveil… will need it…
 Darkness stirs… far worse than goblins…`
     },
 
-    /* KAEL ENEMIES */
     elvenScout: {
         before: "Darkness clings to you. Turn back or be purged.",
         after: "Emberveil… will stop you…"
@@ -991,7 +1012,6 @@ Your victory… is only the beginning of your damnation…`
 
 Object.assign(storyActions, {
 
-    /* ENTRY POINT */
     startChapter1() {
         showScene(
             `<b>Chapter 1 — The Road to Emberveil</b><br><br>
@@ -1006,9 +1026,7 @@ Object.assign(storyActions, {
         return storyActions.kael_start();
     },
 
-    /* ============================================================
-       AELION — GOOD PATH
-       ============================================================ */
+    /* AELION PATH */
 
     aelion_start() {
         playerPortrait.style.backgroundImage =
@@ -1022,6 +1040,7 @@ Object.assign(storyActions, {
     },
 
     aelion_ranger1() {
+        npcPortrait.style.display = "block";
         npcPortrait.style.backgroundImage = "";
 
         showScene(
@@ -1031,7 +1050,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 1 — Rescue Traveler */
     aelion_quest1_start() {
         showScene(
             "You reach the ravine. A <b>Goblin Brute</b> blocks your path.",
@@ -1058,7 +1076,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 2 — Destroy Nest */
     aelion_quest2_intro() {
         showScene(
             "A Human Merchant warns you of a goblin nest nearby.",
@@ -1093,7 +1110,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 3 — Sun‑Sigil */
     aelion_quest3_intro() {
         showScene(
             "An Old Herbalist tells you a goblin shaman stole a sacred Sun‑Sigil.",
@@ -1120,7 +1136,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 4 — Wounded Guard */
     aelion_quest4_intro() {
         showScene(
             "A wounded guard begs for help. A <b>Goblin Stalker</b> lurks nearby.",
@@ -1148,7 +1163,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* AELION BOSS — Goblin Chief */
     aelion_boss_intro() {
         showScene(
             "You enter the heart of the ravine. The <b>Goblin Chief</b> awaits.",
@@ -1172,9 +1186,7 @@ Object.assign(storyActions, {
         );
     },
 
-    /* ============================================================
-       KAEL — EVIL PATH
-       ============================================================ */
+    /* KAEL PATH */
 
     kael_start() {
         playerPortrait.style.backgroundImage =
@@ -1188,6 +1200,7 @@ Object.assign(storyActions, {
     },
 
     kael_goblin1() {
+        npcPortrait.style.display = "block";
         npcPortrait.style.backgroundImage = "";
 
         showScene(
@@ -1196,7 +1209,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 1 — Whispering Shade */
     kael_quest1_start() {
         showScene(
             "A <b>Shade Fragment</b> materializes from the trees.",
@@ -1220,7 +1232,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 2 — Ward Circle */
     kael_quest2_intro() {
         showScene(
             "A Cultist Survivor warns you of a holy ward circle nearby.",
@@ -1247,7 +1258,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 3 — Void Tome Page */
     kael_quest3_intro() {
         showScene(
             "A Hex‑Marked Goblin speaks of a priest guarding a forbidden tome page.",
@@ -1274,7 +1284,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* QUEST 4 — Dying Hermit */
     kael_quest4_intro() {
         showScene(
             "A dying hermit begs for release. A <b>Ranger Captain</b> intervenes.",
@@ -1301,7 +1310,6 @@ Object.assign(storyActions, {
         );
     },
 
-    /* KAEL BOSS — High Priest */
     kael_boss_intro() {
         showScene(
             "In a sacred grove, the <b>Elven High Priest</b> awaits judgment.",
@@ -1325,9 +1333,7 @@ Object.assign(storyActions, {
         );
     },
 
-    /* ============================================================
-       AFTER COMBAT ROUTING
-       ============================================================ */
+    /* AFTER COMBAT ROUTING */
 
     afterCombat() {
         if (player.character === "Aelion") {
@@ -1353,5 +1359,3 @@ Object.assign(storyActions, {
 </script>
 </body>
 </html>
-
-
