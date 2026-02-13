@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tales of Emberveil</title>
+
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: #000;
+        color: #f4f4f4;
+    }
+
+    /* INTRO POPUP */
+    #intro-popup {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        text-align: center;
+        padding: 40px;
+    }
+
+    #intro-popup-content {
+        max-width: 800px;
+        background: rgba(20,20,20,0.9);
+        border: 2px solid #ffb347;
+        padding: 30px;
+        font-size: 1.2rem;
+        line-height: 1.6rem;
+        color: #ffddb0;
+        box-shadow: 0 0 20px #000;
+    }
+
+    #intro-popup button {
+        margin-top: 25px;
+        padding: 12px 25px;
+        background: #222;
+        border: 1px solid #ffb347;
+        color: #ffb347;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+    /* MAIN MENU */
+    #menu {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image: url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Menu%20Background.png');
+        background-size: cover;
+        background-position: center;
+        display: flex; /* visible behind popup */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-shadow: 2px 2px 4px #000;
+    }
+
+    #menu h1 {
+        font-size: 4rem;
+        margin-bottom: 40px;
+        color: #ffb347;
+    }
+
+    .menu-btn {
+        background: rgba(0,0,0,0.6);
+        border: 1px solid #ffb347;
+        padding: 12px 25px;
+        margin: 10px;
+        font-size: 1.3rem;
+        cursor: pointer;
+        color: #ffb347;
+    }
+
+    /* IN-GAME SOUND BUTTON */
+    #sound-toggle-game {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: rgba(0,0,0,0.7);
+        border: 1px solid #ffb347;
+        color: #ffb347;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: none; /* shown when game starts */
+    }
+
+    /* GAME LAYOUT */
+    #game {
+        display: none;
+        padding: 20px;
+        max-width: 1100px;
+        margin: auto;
+        background-image: url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/ingame.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        box-shadow: inset 0 0 0 2000px rgba(0,0,0,0.45);
+    }
+
+    #scene-container {
+        display: grid;
+        grid-template-columns: 200px 1fr 200px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    /* PORTRAITS */
+    .portrait-box {
+        width: 200px;
+        height: 300px;
+        background: rgba(0,0,0,0.4);
+        border: 1px solid #444;
+        background-size: cover;
+        background-position: center;
+    }
+
+    #npc-portrait {
+        display: none; /* hidden unless needed */
+    }
+
+    /* STORY AREA */
+    #story-area {
+        padding: 10px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid #333;
+        min-height: 200px;
+    }
+
+    #choices button {
+        background: #222;
+        border: 1px solid #555;
+        padding: 8px 12px;
+        margin: 4px;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    #choices button:hover {
+        background: #444;
+    }
+
+    /* STATS + LOG */
+    #stats, #log {
+        margin-top: 15px;
+        padding: 10px;
+        background: #111;
+        border: 1px solid #333;
+    }
+
+    #log {
+        max-height: 260px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+
+    /* COMBAT HUD */
+    #combat-hud {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        background: rgba(0,0,0,0.7);
+        border: 1px solid #555;
+    }
+
+    #combat-hud-inner {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .hud-box {
+        flex: 1;
+        border: 1px solid #444;
+        padding: 8px;
+        background: #111;
+        font-size: 0.9rem;
+    }
+
+    .hud-title {
+        font-weight: bold;
+        color: #ffb347;
+        margin-bottom: 4px;
+    }
+
+    /* CHARACTER SELECT */
+    #character-select {
+        display: none;
+        justify-content: center;
+        gap: 40px;
+        margin-top: 40px;
+    }
+
+    .character-option {
+        width: 220px;
+        background: #000;
+        border: 2px solid #ffb347;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .character-option:hover {
+        transform: scale(1.05);
+        border-color: #ffd27f;
+    }
+
+    .character-portrait {
+        width: 100%;
+        height: 300px;
+        background-size: cover;
+        background-position: center;
+        border-bottom: 1px solid #444;
+        margin-bottom: 10px;
+    }
+
+    .character-name {
+        font-size: 1.3rem;
+        color: #ffb347;
+        margin-top: 10px;
+    }
+
+    /* HIT FLASH */
+    .hit-flash {
+        animation: flashHit 0.15s ease-out;
+    }
+
+    @keyframes flashHit {
+        0%   { filter: brightness(3); }
+        100% { filter: brightness(1); }
+    }
+    </style>
+</head>
+<body>
+
+    <!-- INTRO POPUP -->
+    <div id="intro-popup">
+        <div id="intro-popup-content">
+            <h2>Tales of Emberveil</h2>
+            <p>
+                In the ancient realm of Emberveil, the balance between Light and Shadow has endured for centuries.
+                Legends speak of two destinies woven into the fabric of the world —
+                one born to defend the innocent,
+                and one fated to walk the path others fear to tread.
+            </p>
+            <p>
+                Aelion, knight of the Dawn Order, carries the radiance of the sun in his heart.
+                Where darkness rises, he stands unbroken — a shield for the weak,
+                a blade against the corruption spreading across the land.
+            </p>
+            <p>
+                Kael, once a scholar of the arcane, now walks a road shrouded in whispers.
+                The Light hunts him, the Shadows beckon him —
+                yet his purpose is his own, and his power may be the key to restoring balance…
+                or shattering it forever.
+            </p>
+            <p>
+                Two heroes. Two destinies. One realm on the brink.
+                Choose your path, traveler. Will you rise with the Light… or command the Shadow?
+            </p>
+            <button id="intro-begin-btn">Begin</button>
+        </div>
+    </div>
+
+    <!-- AUDIO: SOUND EFFECTS -->
+    <audio id="swordSound" src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/dragon-studio-violent-sword-slice-2-393841.mp3"></audio>
+    <audio id="hitSound" src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/prmodrai-damage-blowhole-402072.mp3"></audio>
+    <audio id="spellSound" src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/dragon-studio-epic-spell-impact-478364.mp3"></audio>
+    <audio id="defendSound" src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/freesound_community-shield-guard-6963.mp3"></audio>
+
+    <!-- AUDIO: MUSIC -->
+    <audio id="musicMenu" loop src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/kaazoom-we-rise-again-fantasy-elvish-song-rpg-448107.mp3"></audio>
+    <audio id="musicAelion" loop src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/onetent-fantasy-music-lumina-143991.mp3"></audio>
+    <audio id="musicKael" loop src="https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/ob-lix-island-of-the-lost-dark-fantasy-background-music-110368.mp3"></audio>
+
+    <!-- MAIN MENU -->
+    <div id="menu">
+        <h1>Tales of Emberveil</h1>
+        <button class="menu-btn" id="btn-new-game">New Game</button>
+        <button class="menu-btn" id="btn-load-game">Load Game</button>
+        <button class="menu-btn" id="btn-fullscreen">Full Screen</button>
+        <button class="menu-btn" id="btn-sound-toggle-menu">Sound: On</button>
+    </div>
+
+    <!-- IN-GAME SOUND TOGGLE -->
+    <button id="sound-toggle-game">Sound: On</button>
+
+    <!-- GAME UI -->
+    <div id="game">
+
+        <div id="scene-container">
+
+            <!-- LEFT PORTRAIT -->
+            <div id="player-portrait" class="portrait-box"></div>
+
+            <!-- STORY AREA -->
+            <div id="story-area">
+                <div id="intro"></div>
+                <div id="choices"></div>
+
+                <!-- CHARACTER SELECT -->
+                <div id="character-select">
+                    <div class="character-option" data-character="Aelion">
+                        <div class="character-portrait"
+                             style="background-image:url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Aelion%20Talk.png');">
+                        </div>
+                        <div class="character-name">Aelion</div>
+                    </div>
+
+                    <div class="character-option" data-character="Kael">
+                        <div class="character-portrait"
+                             style="background-image:url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Kael%20Talk.png');">
+                        </div>
+                        <div class="character-name">Kael</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PORTRAIT (NPC, hidden when none) -->
+            <div id="npc-portrait" class="portrait-box"></div>
+
+        </div>
+
+        <!-- COMBAT HUD -->
+        <div id="combat-hud">
+            <div id="combat-hud-inner">
+                <div class="hud-box" id="player-hud">
+                    <div class="hud-title">Player</div>
+                    <div id="player-hud-content"></div>
+                </div>
+                <div class="hud-box" id="enemy-hud">
+                    <div class="hud-title">Enemy</div>
+                    <div id="enemy-hud-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS + LOG -->
+        <div id="stats"></div>
+        <div id="log"></div>
+
+    </div>
+<script>
+let player = {
+    name: "",
+    character: "",
+    hp: 100,
+    maxHp: 100,
+    mp: 50,
+    maxMp: 50,
+    attack: 10,
+    defense: 5,
+    magic: 10,
+    coins: 0,
+    xp: 0,
+    level: 1,
+    potions: { small: 2, medium: 1, large: 0 },
+    spells: ["Firebolt"]
+};
+
+let enemy = null;
+let inCombat = false;
+let soundEnabled = true;
+let currentMusic = null;
+let currentAction = null;
+let isCombatPhase = false;
+
+const SAVE_KEY = "emberveilSave";
+
+const menu = document.getElementById("menu");
+const game = document.getElementById("game");
+const intro = document.getElementById("intro");
+const choices = document.getElementById("choices");
+const stats = document.getElementById("stats");
+const log = document.getElementById("log");
+const playerPortrait = document.getElementById("player-portrait");
+const npcPortrait = document.getElementById("npc-portrait");
+const combatHUD = document.getElementById("combat-hud");
+const playerHUD = document.getElementById("player-hud-content");
+const enemyHUD = document.getElementById("enemy-hud-content");
+
+const swordSound = document.getElementById("swordSound");
+const hitSound = document.getElementById("hitSound");
+const spellSound = document.getElementById("spellSound");
+const defendSound = document.getElementById("defendSound");
+
+const musicMenu = document.getElementById("musicMenu");
+const musicAelion = document.getElementById("musicAelion");
+const musicKael = document.getElementById("musicKael");
+
+const btnSoundMenu = document.getElementById("btn-sound-toggle-menu");
+const btnSoundGame = document.getElementById("sound-toggle-game");
+
+const introPopup = document.getElementById("intro-popup");
+const introBeginBtn = document.getElementById("intro-begin-btn");
+
+const enemyDialogues = {};
+const storyActions = {};
+
+function setMusicVolumeForState() {
+    const baseVol = 0.25;
+    const combatVol = 0.15;
+
+    [musicMenu, musicAelion, musicKael].forEach(m => {
+        if (!m) return;
+        if (!soundEnabled) {
+            m.volume = 0;
+        } else {
+            if (m === currentMusic && isCombatPhase && m !== musicMenu) {
+                m.volume = combatVol;
+            } else {
+                m.volume = baseVol;
+            }
+        }
+    });
+}
+
+function fadeToMusic(target) {
+    if (currentMusic === target) {
+        setMusicVolumeForState();
+        if (soundEnabled && currentMusic.paused) currentMusic.play();
+        return;
+    }
+
+    const old = currentMusic;
+    currentMusic = target;
+
+    if (old) {
+        let vol = old.volume;
+        const step = vol / 10;
+        const fadeOut = setInterval(() => {
+            vol -= step;
+            if (vol <= 0) {
+                old.volume = 0;
+                old.pause();
+                clearInterval(fadeOut);
+            } else old.volume = vol;
+        }, 100);
+    }
+
+    if (currentMusic) {
+        currentMusic.currentTime = 0;
+        if (soundEnabled) currentMusic.play();
+        let vol = 0;
+        currentMusic.volume = 0;
+        const targetVol = 0.25;
+        const fadeIn = setInterval(() => {
+            vol += targetVol / 10;
+            if (vol >= targetVol) {
+                clearInterval(fadeIn);
+                setMusicVolumeForState();
+            } else currentMusic.volume = vol;
+        }, 100);
+    }
+}
+
+function playMenuMusic() {
+    isCombatPhase = false;
+    fadeToMusic(musicMenu);
+}
+
+function playCharacterMusic() {
+    isCombatPhase = false;
+    if (player.character === "Aelion") fadeToMusic(musicAelion);
+    else fadeToMusic(musicKael);
+}
+
+function enterCombatMusicState() {
+    isCombatPhase = true;
+    setMusicVolumeForState();
+}
+
+function exitCombatMusicState() {
+    isCombatPhase = false;
+    setMusicVolumeForState();
+}
+
+function playSound(sfx) {
+    if (!soundEnabled) return;
+    sfx.currentTime = 0;
+    sfx.play();
+}
+
+function updateSoundButtons() {
+    const label = soundEnabled ? "Sound: On" : "Sound: Off";
+    btnSoundMenu.textContent = label;
+    btnSoundGame.textContent = label;
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+
+    if (!soundEnabled) {
+        [musicMenu, musicAelion, musicKael].forEach(m => {
+            m.volume = 0;
+            m.pause();
+        });
+    } else {
+        if (currentMusic) currentMusic.play();
+        setMusicVolumeForState();
+    }
+
+    updateSoundButtons();
+}
+
+btnSoundMenu.onclick = toggleSound;
+btnSoundGame.onclick = toggleSound;
+
+function showScene(text, options = []) {
+    intro.innerHTML = text;
+    choices.innerHTML = "";
+
+    options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt.text;
+        btn.onclick = () => handleAction(opt.action);
+        choices.appendChild(btn);
+    });
+
+    npcPortrait.style.display = "none";
+    npcPortrait.style.backgroundImage = "";
+}
+
+function updateStats() {
+    stats.innerHTML = `
+        <b>${player.name}</b> (${player.character})<br>
+        HP: ${player.hp}/${player.maxHp}<br>
+        MP: ${player.mp}/${player.maxMp}<br>
+        ATK: ${player.attack} | DEF: ${player.defense} | MAG: ${player.magic}<br>
+        Coins: ${player.coins}<br>
+        XP: ${player.xp} | Level: ${player.level}<br>
+        Potions: S(${player.potions.small}) M(${player.potions.medium}) L(${player.potions.large})
+    `;
+}
+
+function logMsg(msg) {
+    log.innerHTML += msg + "\n";
+    log.scrollTop = log.scrollHeight;
+}
+
+function saveGame() {
+    const data = {
+        player,
+        currentAction
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+}
+
+function loadGame() {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+}
+
+function clearSave() {
+    localStorage.removeItem(SAVE_KEY);
+}
+
+document.getElementById("btn-new-game").onclick = () => {
+    clearSave();
+    menu.style.display = "flex";
+    game.style.display = "block";
+    document.getElementById("character-select").style.display = "flex";
+    btnSoundGame.style.display = "block";
+};
+
+document.getElementById("btn-load-game").onclick = () => {
+    const data = loadGame();
+    if (!data) {
+        alert("No save data found.");
+        return;
+    }
+
+    player = data.player;
+    currentAction = data.currentAction || "startChapter1";
+
+    menu.style.display = "none";
+    game.style.display = "block";
+    document.getElementById("character-select").style.display = "none";
+    btnSoundGame.style.display = "block";
+
+    if (player.character === "Aelion") {
+        playerPortrait.style.backgroundImage =
+            "url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Aelion%20Talk.png')";
+    } else {
+        playerPortrait.style.backgroundImage =
+            "url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Kael%20Talk.png')";
+    }
+
+    playCharacterMusic();
+    updateStats();
+    handleAction(currentAction);
+};
+
+document.getElementById("btn-fullscreen").onclick = () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen().catch(() => {});
+    }
+};
+
+document.querySelectorAll(".character-option").forEach(opt => {
+    opt.onclick = () => startNewGame(opt.dataset.character);
+});
+
+function startNewGame(char) {
+    player = {
+        name: char,
+        character: char,
+        hp: 100,
+        maxHp: 100,
+        mp: 50,
+        maxMp: 50,
+        attack: 10,
+        defense: 5,
+        magic: 10,
+        coins: 0,
+        xp: 0,
+        level: 1,
+        potions: { small: 2, medium: 1, large: 0 },
+        spells: ["Firebolt"]
+    };
+
+    if (char === "Aelion") {
+        playerPortrait.style.backgroundImage =
+            "url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Aelion%20Talk.png')";
+    } else {
+        playerPortrait.style.backgroundImage =
+            "url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Kael%20Talk.png')";
+    }
+
+    document.getElementById("character-select").style.display = "none";
+
+    currentAction = "startChapter1";
+    saveGame();
+    playCharacterMusic();
+    updateStats();
+    handleAction("startChapter1");
+}
+
+function startFight(name, statsObj, portrait, dialogueKey) {
+    inCombat = true;
+    isCombatPhase = true;
+    setMusicVolumeForState();
+
+    enemy = {
+        name,
+        hp: statsObj.hp,
+        maxHp: statsObj.hp,
+        attack: statsObj.attack,
+        defense: statsObj.defense,
+        coins: statsObj.coins,
+        xp: statsObj.xp,
+        portrait,
+        dialogueKey
+    };
+
+    if (portrait) {
+        npcPortrait.style.display = "block";
+        npcPortrait.style.backgroundImage = `url('${portrait}')`;
+    } else {
+        npcPortrait.style.display = "none";
+        npcPortrait.style.backgroundImage = "";
+    }
+
+    showEnemyDialogueBefore();
+}
+
+function showEnemyDialogueBefore() {
+    const d = enemyDialogues[enemy.dialogueKey]?.before || "The enemy approaches.";
+    showScene(d, [{ text: "Fight!", action: "beginCombat" }]);
+}
+
+function beginCombat() {
+    intro.innerHTML = "";
+    choices.innerHTML = "";
+
+    combatHUD.style.display = "block";
+    enterCombatMusicState();
+    updateCombatHUD();
+
+    choices.innerHTML = `
+        <button onclick="handleAction('attack')">Attack</button>
+        <button onclick="handleAction('spellMenu')">Cast Spell</button>
+        <button onclick="handleAction('defend')">Defend</button>
+        <button onclick="handleAction('potionMenu')">Use Potion</button>
+    `;
+}
+
+function updateCombatHUD() {
+    playerHUD.innerHTML = `
+        HP: ${player.hp}/${player.maxHp}<br>
+        MP: ${player.mp}/${player.maxMp}<br>
+        ATK: ${player.attack} | DEF: ${player.defense} | MAG: ${player.magic}
+    `;
+
+    enemyHUD.innerHTML = `
+        ${enemy.name}<br>
+        HP: ${enemy.hp}/${enemy.maxHp}<br>
+        ATK: ${enemy.attack} | DEF: ${enemy.defense}
+    `;
+}
+
+function handleAction(action) {
+    if (action === "attack") return attack();
+    if (action === "defend") return defend();
+    if (action === "spellMenu") return spellMenu();
+    if (action === "potionMenu") return potionMenu();
+    if (action === "beginCombat") return beginCombat();
+
+    if (action.startsWith("cast:")) {
+        return castSpell(action.split(":")[1]);
+    }
+
+    if (action.startsWith("potion:")) {
+        return usePotion(action.split(":")[1]);
+    }
+
+    if (storyActions[action]) {
+        currentAction = action;
+        saveGame();
+        return storyActions[action]();
+    }
+
+    console.warn("Unknown action:", action);
+}
+
+function attack() {
+    playSound(swordSound);
+
+    const dmg = Math.max(1, player.attack - enemy.defense);
+    enemy.hp -= dmg;
+
+    npcPortrait.classList.add("hit-flash");
+    setTimeout(() => npcPortrait.classList.remove("hit-flash"), 150);
+
+    logMsg(`You strike the ${enemy.name} for ${dmg} damage.`);
+    updateCombatHUD();
+
+    if (enemy.hp <= 0) return winFight();
+    enemyTurn();
+}
+
+function defend() {
+    playSound(defendSound);
+
+    logMsg("You brace for impact. Defense doubled this turn.");
+    player.tempDefense = player.defense * 2;
+
+    enemyTurn(true);
+}
+
+function spellMenu() {
+    const opts = player.spells.map(s => ({
+        text: s,
+        action: `cast:${s}`
+    }));
+
+    opts.push({ text: "Back", action: "beginCombat" });
+
+    showScene("Choose a spell:", opts);
+}
+
+function castSpell(spell) {
+    if (spell === "Firebolt") {
+        if (player.mp < 10) return logMsg("Not enough MP!");
+        player.mp -= 10;
+        playSound(spellSound);
+
+        const dmg = player.magic * 2;
+        enemy.hp -= dmg;
+
+        npcPortrait.classList.add("hit-flash");
+        setTimeout(() => npcPortrait.classList.remove("hit-flash"), 150);
+
+        logMsg(`You cast Firebolt for ${dmg} damage!`);
+        updateCombatHUD();
+
+        if (enemy.hp <= 0) return winFight();
+        enemyTurn();
+    }
+}
+
+function potionMenu() {
+    showScene("Choose a potion:", [
+        { text: `Small (${player.potions.small})`, action: "potion:small" },
+        { text: `Medium (${player.potions.medium})`, action: "potion:medium" },
+        { text: `Large (${player.potions.large})`, action: "potion:large" },
+        { text: "Back", action: "beginCombat" }
+    ]);
+}
+
+function usePotion(size) {
+    if (player.potions[size] <= 0) {
+        logMsg("You have none left.");
+        return beginCombat();
+    }
+
+    let heal = size === "small" ? 20 : size === "medium" ? 50 : 100;
+
+    player.potions[size]--;
+    player.hp = Math.min(player.maxHp, player.hp + heal);
+
+    logMsg(`You drink a ${size} potion and heal ${heal} HP.`);
+    updateCombatHUD();
+
+    enemyTurn();
+}
+
+function enemyTurn(defended = false) {
+    setTimeout(() => {
+        playSound(hitSound);
+
+        const def = defended ? player.tempDefense : player.defense;
+        const dmg = Math.max(1, enemy.attack - def);
+
+        player.hp -= dmg;
+
+        playerPortrait.classList.add("hit-flash");
+        setTimeout(() => playerPortrait.classList.remove("hit-flash"), 150);
+
+        logMsg(`${enemy.name} hits you for ${dmg} damage.`);
+        updateCombatHUD();
+
+        if (player.hp <= 0) return gameOver();
+
+        player.tempDefense = null;
+        beginCombat();
+    }, 600);
+}
+
+function winFight() {
+    inCombat = false;
+    isCombatPhase = false;
+    exitCombatMusicState();
+
+    const d = enemyDialogues[enemy.dialogueKey]?.after || "The enemy falls.";
+    showScene(d, [{ text: "Continue", action: "finishWin" }]);
+}
+
+function finishWin() {
+    logMsg(`You defeated ${enemy.name}!`);
+    player.coins += enemy.coins;
+    player.xp += enemy.xp;
+
+    updateStats();
+    npcPortrait.style.display = "none";
+    npcPortrait.style.backgroundImage = "";
+
+    storyActions.afterCombat();
+    saveGame();
+}
+
+function gameOver() {
+    inCombat = false;
+    isCombatPhase = false;
+    exitCombatMusicState();
+
+    combatHUD.style.display = "none";
+    npcPortrait.style.display = "none";
+    npcPortrait.style.backgroundImage = "";
+
+    showScene("You have fallen...", [
+        { text: "Return to Menu", action: "returnToMenu" },
+        { text: "Restart from Beginning", action: "restartFromBeginning" }
+    ]);
+}
+
+function returnToMenu() {
+    game.style.display = "none";
+    menu.style.display = "flex";
+    playMenuMusic();
+}
+
+function restartFromBeginning() {
+    clearSave();
+    location.reload();
+}
+
+window.addEventListener("beforeunload", () => {
+    saveGame();
+});
+
+window.addEventListener("load", () => {
+    updateSoundButtons();
+
+    // Intro popup controls audio + menu
+    introBeginBtn.addEventListener("click", () => {
+        introPopup.style.display = "none";
+        menu.style.display = "flex";
+        if (soundEnabled) playMenuMusic();
+    });
+});
+</script>
+<script>
+Object.assign(enemyDialogues, {
+    goblinScout: {
+        before: "Fresh meat! Chief will like your head!",
+        after: "No… Chief… protect us…"
+    },
+    goblinRaider: {
+        before: "Shiny knight! I take armor AND bones!",
+        after: "Light… burns…"
+    },
+    goblinBrute: {
+        before: "Knight… you shine too bright. I crush light!",
+        after: "Crushed… by light…"
+    },
+    goblinShaman: {
+        before: "Sun‑sigil mine! You too late, knight!",
+        after: "Sigil… returns… to light…"
+    },
+    goblinStalker: {
+        before: "You walk alone… easy prey…",
+        after: "Not… prey…"
+    },
+    goblinChief: {
+        before:
+`You’ve slain my kin, burned my banners, and scattered my warriors.
+But here, in the heart of my ravine, your journey ends.
+I will carve your name into the stones as a warning to Emberveil.`,
+        after:
+`You… carry strength beyond your size…
+Emberveil… will need it…
+Darkness stirs… far worse than goblins…`
+    },
+    elvenScout: {
+        before: "Darkness clings to you. Turn back or be purged.",
+        after: "Emberveil… will stop you…"
+    },
+    humanKnight: {
+        before: "Stand down, mage! Your corruption ends here!",
+        after: "The realm… will endure…"
+    },
+    priestOfLight: {
+        before: "Shadow‑touched one… your soul flickers with decay.",
+        after: "Light… still… shines…"
+    },
+    rangerCaptain: {
+        before: "You trespass on sacred ground. I will not allow it.",
+        after: "Forest… protect…"
+    },
+    highPriest: {
+        before:
+`Child of shadow… your presence stains this sacred grove.
+I sense the void whispering through your veins.
+Turn back now, or I shall cleanse this land of your corruption.`,
+        after:
+`Emberveil… will not fall…
+Not while its people still draw breath…
+Your victory… is only the beginning of your damnation…`
+    }
+});
+
+Object.assign(storyActions, {
+    startChapter1() {
+        showScene(
+            `<b>Chapter 1 — The Road to Emberveil</b><br><br>
+            The wind carries whispers of unrest. Travelers vanish, patrols go silent,
+            and the balance of the realm trembles.`,
+            [{ text: "Continue", action: "chapter1_intro" }]
+        );
+    },
+
+    chapter1_intro() {
+        if (player.character === "Aelion") return storyActions.aelion_start();
+        return storyActions.kael_start();
+    },
+
+    /* AELION PATH */
+
+    aelion_start() {
+        playerPortrait.style.backgroundImage =
+            "url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Aelion%20Talk.png')";
+
+        showScene(
+            `Aelion steps onto the Emberveil Road, sworn to protect the innocent.
+             A distressed <b>Elven Ranger</b> waves him down.`,
+            [{ text: "Approach the ranger", action: "aelion_ranger1" }]
+        );
+    },
+
+    aelion_ranger1() {
+        npcPortrait.style.display = "block";
+        npcPortrait.style.backgroundImage = "";
+
+        showScene(
+            `"Knight! Goblins dragged a traveler toward the ravine.
+             Please—save them before it's too late!"`,
+            [{ text: "Ride to the ravine", action: "aelion_quest1_start" }]
+        );
+    },
+
+    aelion_quest1_start() {
+        showScene(
+            "You reach the ravine. A <b>Goblin Brute</b> blocks your path.",
+            [{ text: "Fight the Goblin Brute", action: "aelion_fight_brute" }]
+        );
+    },
+
+    aelion_fight_brute() {
+        startFight(
+            "Goblin Brute",
+            { hp: 40, attack: 10, defense: 3, coins: 8, xp: 10 },
+            "",
+            "goblinBrute"
+        );
+    },
+
+    aelion_quest1_after() {
+        player.coins += 10;
+        updateStats();
+
+        showScene(
+            "The traveler thanks you profusely and gives you 10 coins.",
+            [{ text: "Continue", action: "aelion_quest2_intro" }]
+        );
+    },
+
+    aelion_quest2_intro() {
+        showScene(
+            "A Human Merchant warns you of a goblin nest nearby.",
+            [{ text: "Investigate the nest", action: "aelion_quest2_start" }]
+        );
+    },
+
+    aelion_quest2_start() {
+        showScene(
+            "A <b>Goblin Raider</b> leaps from the shadows!",
+            [{ text: "Fight", action: "aelion_fight_raider" }]
+        );
+    },
+
+    aelion_fight_raider() {
+        startFight(
+            "Goblin Raider",
+            { hp: 35, attack: 9, defense: 2, coins: 6, xp: 8 },
+            "",
+            "goblinRaider"
+        );
+    },
+
+    aelion_quest2_after() {
+        player.attack++;
+        player.defense++;
+        updateStats();
+
+        showScene(
+            "The nest collapses. You gain +1 ATK and +1 DEF.",
+            [{ text: "Continue", action: "aelion_quest3_intro" }]
+        );
+    },
+
+    aelion_quest3_intro() {
+        showScene(
+            "An Old Herbalist tells you a goblin shaman stole a sacred Sun‑Sigil.",
+            [{ text: "Track the shaman", action: "aelion_fight_shaman" }]
+        );
+    },
+
+    aelion_fight_shaman() {
+        startFight(
+            "Goblin Shaman",
+            { hp: 45, attack: 8, defense: 4, coins: 12, xp: 12 },
+            "",
+            "goblinShaman"
+        );
+    },
+
+    aelion_quest3_after() {
+        player.magic += 2;
+        updateStats();
+
+        showScene(
+            "You reclaim the Sun‑Sigil. Your magic grows stronger (+2 MAG).",
+            [{ text: "Continue", action: "aelion_quest4_intro" }]
+        );
+    },
+
+    aelion_quest4_intro() {
+        showScene(
+            "A wounded guard begs for help. A <b>Goblin Stalker</b> lurks nearby.",
+            [{ text: "Fight the Stalker", action: "aelion_fight_stalker" }]
+        );
+    },
+
+    aelion_fight_stalker() {
+        startFight(
+            "Goblin Stalker",
+            { hp: 30, attack: 11, defense: 2, coins: 5, xp: 7 },
+            "",
+            "goblinStalker"
+        );
+    },
+
+    aelion_quest4_after() {
+        player.maxHp += 10;
+        player.hp = player.maxHp;
+        updateStats();
+
+        showScene(
+            "The guard survives. You gain +10 max HP.",
+            [{ text: "Continue", action: "aelion_boss_intro" }]
+        );
+    },
+
+    aelion_boss_intro() {
+        showScene(
+            "You enter the heart of the ravine. The <b>Goblin Chief</b> awaits.",
+            [{ text: "Face the Chief", action: "aelion_fight_chief" }]
+        );
+    },
+
+    aelion_fight_chief() {
+        startFight(
+            "Goblin Chief",
+            { hp: 80, attack: 14, defense: 6, coins: 20, xp: 30 },
+            "",
+            "goblinChief"
+        );
+    },
+
+    aelion_boss_after() {
+        showScene(
+            "<b>Chapter 1 Complete — Aelion</b><br><br>The light of Emberveil endures.",
+            [{ text: "Return to Menu", action: "returnToMenu" }]
+        );
+    },
+
+    /* KAEL PATH */
+
+    kael_start() {
+        playerPortrait.style.backgroundImage =
+            "url('https://raw.githubusercontent.com/brusr24-beep/Tales-Of/main/Kael%20Talk.png')";
+
+        showScene(
+            `Kael walks the Emberveil Road, shadows whispering at his heels.
+             A <b>Goblin Informant</b> beckons him closer.`,
+            [{ text: "Approach the goblin", action: "kael_goblin1" }]
+        );
+    },
+
+    kael_goblin1() {
+        npcPortrait.style.display = "block";
+        npcPortrait.style.backgroundImage = "";
+
+        showScene(
+            `"Heh… dark one. Elves hunt you. Humans too. But we help… for price."`,
+            [{ text: "Listen", action: "kael_quest1_start" }]
+        );
+    },
+
+    kael_quest1_start() {
+        showScene(
+            "A <b>Shade Fragment</b> materializes from the trees.",
+            [{ text: "Fight", action: "kael_fight_shade" }]
+        );
+    },
+
+    kael_fight_shade() {
+        startFight(
+            "Elven Scout",
+            { hp: 35, attack: 9, defense: 3, coins: 6, xp: 8 },
+            "",
+            "elvenScout"
+        );
+    },
+
+    kael_quest1_after() {
+        showScene(
+            "The shade whispers secrets of the forest.",
+            [{ text: "Continue", action: "kael_quest2_intro" }]
+        );
+    },
+
+    kael_quest2_intro() {
+        showScene(
+            "A Cultist Survivor warns you of a holy ward circle nearby.",
+            [{ text: "Destroy the ward", action: "kael_fight_knight" }]
+        );
+    },
+
+    kael_fight_knight() {
+        startFight(
+            "Human Knight",
+            { hp: 45, attack: 12, defense: 5, coins: 10, xp: 12 },
+            "",
+            "humanKnight"
+        );
+    },
+
+    kael_quest2_after() {
+        player.defense++;
+        updateStats();
+
+        showScene(
+            "The ward collapses. You gain +1 DEF.",
+            [{ text: "Continue", action: "kael_quest3_intro" }]
+        );
+    },
+
+    kael_quest3_intro() {
+        showScene(
+            "A Hex‑Marked Goblin speaks of a priest guarding a forbidden tome page.",
+            [{ text: "Seek the priest", action: "kael_fight_priest" }]
+        );
+    },
+
+    kael_fight_priest() {
+        startFight(
+            "Priest of Emberveil",
+            { hp: 50, attack: 10, defense: 6, coins: 12, xp: 14 },
+            "",
+            "priestOfLight"
+        );
+    },
+
+    kael_quest3_after() {
+        player.magic += 2;
+        updateStats();
+
+        showScene(
+            "You claim the Void‑Tome page. +2 MAG.",
+            [{ text: "Continue", action: "kael_quest4_intro" }]
+        );
+    },
+
+    kael_quest4_intro() {
+        showScene(
+            "A dying hermit begs for release. A <b>Ranger Captain</b> intervenes.",
+            [{ text: "Fight", action: "kael_fight_ranger" }]
+        );
+    },
+
+    kael_fight_ranger() {
+        startFight(
+            "Ranger Captain",
+            { hp: 40, attack: 11, defense: 4, coins: 8, xp: 10 },
+            "",
+            "rangerCaptain"
+        );
+    },
+
+    kael_quest4_after() {
+        player.attack++;
+        updateStats();
+
+        showScene(
+            "The hermit dies peacefully. You gain +1 ATK.",
+            [{ text: "Continue", action: "kael_boss_intro" }]
+        );
+    },
+
+    kael_boss_intro() {
+        showScene(
+            "In a sacred grove, the <b>Elven High Priest</b> awaits judgment.",
+            [{ text: "Confront the High Priest", action: "kael_fight_priestBoss" }]
+        );
+    },
+
+    kael_fight_priestBoss() {
+        startFight(
+            "Elven High Priest",
+            { hp: 85, attack: 15, defense: 7, coins: 25, xp: 35 },
+            "",
+            "highPriest"
+        );
+    },
+
+    kael_boss_after() {
+        showScene(
+            "<b>Chapter 1 Complete — Kael</b><br><br>The shadows deepen.",
+            [{ text: "Return to Menu", action: "returnToMenu" }]
+        );
+    },
+
+    /* AFTER COMBAT ROUTING */
+
+    afterCombat() {
+        if (player.character === "Aelion") {
+            if (enemy.dialogueKey === "goblinBrute") return storyActions.aelion_quest1_after();
+            if (enemy.dialogueKey === "goblinRaider") return storyActions.aelion_quest2_after();
+            if (enemy.dialogueKey === "goblinShaman") return storyActions.aelion_quest3_after();
+            if (enemy.dialogueKey === "goblinStalker") return storyActions.aelion_quest4_after();
+            if (enemy.dialogueKey === "goblinChief") return storyActions.aelion_boss_after();
+        } else {
+            if (enemy.dialogueKey === "elvenScout") return storyActions.kael_quest1_after();
+            if (enemy.dialogueKey === "humanKnight") return storyActions.kael_quest2_after();
+            if (enemy.dialogueKey === "priestOfLight") return storyActions.kael_quest3_after();
+            if (enemy.dialogueKey === "rangerCaptain") return storyActions.kael_quest4_after();
+            if (enemy.dialogueKey === "highPriest") return storyActions.kael_boss_after();
+        }
+    }
+});
+</script>
+</body>
+</html>
+
